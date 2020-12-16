@@ -14,11 +14,12 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/net/html"
 )
-func ArticleToEpub(ctx context.Context, articles chan(Article), epubFile string) error {
+func ArticleToEpub(ctx context.Context, articles chan(Article), epubFile string) ([]int, error) {
     log.Printf("Starting ebook creation...")
     now := time.Now()
     book := epub.NewEpub(fmt.Sprintf("Pocket articles: %d %d %d", now.Day(), now.Month(), now.Year()))
     book.SetAuthor("Some machine, somewhere")
+    articleIds := make([]int, 0, articleCount * 3)
     i := 0
     var err error
     for item := range articles {
@@ -39,11 +40,12 @@ func ArticleToEpub(ctx context.Context, articles chan(Article), epubFile string)
                 log.Printf("Error when fetching image: %s", err.Error())
             }
             book.AddSection(content, item.Pocket.ResolvedTitle, uuid.New().String(), "")
+            articleIds = append(articleIds, item.Pocket.ItemID)
             i++
         }
     }
     log.Printf("Creating a epub with %d articles", i)
-    return book.Write(epubFile)
+    return articleIds, book.Write(epubFile)
 }
 
 func FillFavURL(article *Article) {

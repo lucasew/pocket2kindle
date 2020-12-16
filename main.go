@@ -22,12 +22,16 @@ const favoriteUrl = "https://getpocket.com/v3/send?actions=%5B%7B%22action%22%3A
 var articleCount int
 var timeout int
 var dontDeleteIntermediates bool
+var kindleEmail string
+var archiveBundled bool
 
 func init() {
     log.Printf("Initializing...")
     flag.IntVar(&articleCount, "c", 10, "how much articles to fetch")
     flag.IntVar(&timeout, "t", 30, "timeout to fetch all articles")
     flag.BoolVar(&dontDeleteIntermediates, "d", false, "dont delete intermediate files")
+    flag.StringVar(&kindleEmail, "k", "", "kindle email to send things")
+    flag.BoolVar(&archiveBundled, "a", false, "archive bundled articles in pocket")
     flag.Parse()
     client = pocket.NewPocketActor(MustGetenv("POCKET_CONSUMER_KEY"), MustGetenv("POCKET_REQUEST_TOKEN"))
     MustLookupBinary("ebook-convert") // calibre
@@ -48,7 +52,8 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    err = ArticleToEpub(timeoutCtx, articles, "__book__.epub")
+    var articleIds []int
+    articleIds, err = ArticleToEpub(timeoutCtx, articles, "__book__.epub")
     if err != nil {
         log.Fatal(err)
     }
@@ -62,4 +67,25 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
+    if kindleEmail != "" {
+        err := SendEmail(kindleEmail)
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
+    if archiveBundled {
+        log.Printf("Archiving bundled articles in pocket...")
+        archiveAction := make([]*api.Action, len(articles))
+        for i, article := range articleIds {
+            archiveAction[i] = &api.Action{
+                Action: "archive",
+                ItemID: article,
+            }
+        }
+        _, err = client.GetSuper().Modify(archiveAction...)
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
+    log.Printf("Done!")
 }
