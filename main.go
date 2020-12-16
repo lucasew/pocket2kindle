@@ -25,7 +25,7 @@ import (
 
 var client pocket.PocketActor
 
-const favoriteUrl = "https://getpocket.com/v3/send?actions=%5B%7B%22action%22%3A%22archive%22%2C%22time%22%3A[TIME]%2C%22item_id%22%3A[ITEM_ID]%7D%5D&access_token=[ACCESS_TOKEN]&consumer_key=[CONSUMER_KEY]"
+const favoriteUrl = "https://getpocket.com/v3/send?actions=%5B%7B%22action%22%3A%22favorite%22%2C%22time%22%3A[TIME]%2C%22item_id%22%3A[ITEM_ID]%7D%5D&access_token=[ACCESS_TOKEN]&consumer_key=[CONSUMER_KEY]"
 
 // flags
 var articleCount int
@@ -111,7 +111,8 @@ func FillFavURL(article *Article) {
 }
 
 func GetExtension(name string) string {
-    parts := strings.Split(name, ".")
+    noQueryStrings := strings.Split(name, "?")[0]
+    parts := strings.Split(noQueryStrings, ".")
     return parts[len(parts) - 1] // the thing after .
 }
 
@@ -179,6 +180,8 @@ var contentTemplate = template.Must(template.New("content").Parse(`
 <a href="{{ .FavUrl }}">Favorite</a>
 
 {{ .Readability.Content }}
+
+<a href="{{ .FavUrl }}">Favorite</a>
 `))
 
 func GetContent(article Article) (string, error) {
@@ -258,6 +261,7 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
+    log.Printf("Converting ebook to mobi using calibre...")
     cmd := exec.Command("ebook-convert", "__book__.epub", "out.mobi")
     defer DeleteIntermediate("__book__.epub")
     cmd.Stdout = os.Stdout
