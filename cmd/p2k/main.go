@@ -75,7 +75,7 @@ func main() {
     }
     if archiveBundled {
         log.Printf("Archiving bundled articles in pocket...")
-        archiveAction := make([]*api.Action, len(articles))
+        archiveAction := make([]*api.Action, len(articleIds))
         for i, article := range articleIds {
             archiveAction[i] = &api.Action{
                 Action: "archive",
