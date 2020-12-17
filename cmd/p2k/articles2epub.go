@@ -59,7 +59,12 @@ func FillFavURL(article *Article) {
 func GetExtension(name string) string {
     noQueryStrings := strings.Split(name, "?")[0]
     parts := strings.Split(noQueryStrings, ".")
-    return parts[len(parts) - 1] // the thing after .
+    extension := parts[len(parts) - 1] // the thing after .
+    if len(extension) > 5 {
+        return ""
+    } else {
+        return extension
+    }
 }
 
 // &{Parent:0xc000688700 FirstChild:<nil> LastChild:<nil> PrevSibling:<nil> NextSibling:<nil> Type:3 DataAtom:img Data:img Namespace: Attr:[{Namespace: Key:src Val:https://uploads.sitepoint.com/wp-content/uploads/2020/12/1606848785desktop_perf.svg} {Namespace: Key:alt Val:Chart showing simulation time for first 10 days on desktop} {Namespace: Key:loading Val:lazy}]}
