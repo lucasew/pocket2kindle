@@ -72,7 +72,11 @@ func FetchImages(content string, book *epub.Epub) (processed string, err error) 
             for _, v := range node.Attr {
                 if v.Key == "src" {
                     log.Printf("Downloading image '%s'", v.Val)
-                    filename := fmt.Sprintf("%s.%s", uuid.New(), GetExtension(v.Val))
+                    extension := GetExtension(v.Val)
+                    if extension == "" {
+                        break
+                    }
+                    filename := fmt.Sprintf("%s.%s", uuid.New(), extension)
                     filename, err = book.AddImage(v.Val, filename)
                     if err != nil {
                         break
