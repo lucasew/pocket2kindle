@@ -1,4 +1,4 @@
-module github.com/lucasew/p2k
+module github.com/lucasew/pocket2kindle
 
 go 1.15
 

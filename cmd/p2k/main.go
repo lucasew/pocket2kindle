@@ -10,7 +10,7 @@ import (
 
 	// "github.com/davecgh/go-spew/spew"
 	readability "github.com/go-shiori/go-readability"
-	"github.com/lucasew/p2k/pocket"
+	"github.com/lucasew/pocket2kindle/pocket"
 	"github.com/motemen/go-pocket/api"
 )
 
