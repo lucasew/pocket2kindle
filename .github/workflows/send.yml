@@ -1,0 +1,26 @@
+name: Go
+
+on:
+  workflow_dispatch
+jobs:
+
+  setupAndSend:
+    name: Setup and send
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Install go
+      uses: actions/setup-go@v2
+    - name: Install calibre
+      run: sudo apt install calibre
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+    - name: Run
+      run: go run ./cmd/p2k -k ${{ secrets.KINDLE_EMAIL }}
+      env:
+        POCKET_CONSUMER_KEY: ${{ secrets.POCKET_CONSUMER_KEY }}
+        POCKET_REQUEST_TOKEN: ${{ secrets.POCKET_REQUEST_TOKEN }}
+        SMTP_PASSWD: ${{ secrets.SMTP_PASSWD }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_USER: ${{ secrets.SMTP_USER }}
