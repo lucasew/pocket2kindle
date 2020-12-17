@@ -17,7 +17,7 @@ import (
 func ArticleToEpub(ctx context.Context, articles chan(Article), epubFile string) ([]int, error) {
     log.Printf("Starting ebook creation...")
     now := time.Now()
-    book := epub.NewEpub(fmt.Sprintf("Pocket articles: %d %d %d", now.Day(), now.Month(), now.Year()))
+    book := epub.NewEpub(fmt.Sprintf("Pocket articles %d/%d/%d %d:%d", now.Day(), now.Month(), now.Year(), now.Hour(), now.Minute()))
     book.SetAuthor("Some machine, somewhere")
     articleIds := make([]int, 0, articleCount * 3)
     i := 0

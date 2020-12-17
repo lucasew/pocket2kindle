@@ -22,9 +22,8 @@ func SendEmail(addr ...string) error {
     mail := mailyak.New(server, auth)
     mail.To(addr...)
     mail.From(user)
-    mail.FromName("pocket2kindle bot")
     mail.Subject("")
-    mail.Attach("ebook.mobi", mobi)
+    mail.AttachInlineWithMimeType("ebook.mobi", mobi, "application/x-mobipocket-ebook")
     log.Printf("Sending email...")
     err = mail.Send()
     if err != nil {
