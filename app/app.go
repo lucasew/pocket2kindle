@@ -160,7 +160,7 @@ func (a *App) Run(ctx context.Context) error {
 
     epubOptions := epub.EpubOptions{
         Author: "Some machine, somewhere",
-        Title: fmt.Sprintf("Pocket articles %d/%d/%d %d/%2.d", now.Day(), now.Month(), now.Year(), now.Hour(), now.Minute()),
+        Title: fmt.Sprintf("Pocket articles %d/%d/%d %d:%2.d", now.Day(), now.Month(), now.Year(), now.Hour(), now.Minute()),
     }
 
     a.Printf("Generating epub file...")
