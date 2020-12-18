@@ -17,3 +17,4 @@ func NewPocketActor(consumerKey, accessToken string) PocketActor {
 func (super PocketActor) GetSuper() *api.Client {
     return super.super
 }
+
