@@ -102,14 +102,13 @@ func (a *App) StepFetchArticles(ctx context.Context) ([]epub.EpubArticle, error)
     processedArticleChan := make(chan(epub.EpubArticle), 4)
     var processArticle func(ctx context.Context)
     processArticle = func(ctx context.Context) {
-        a.Printf("Retrieving the next article...")
         articlePtr := retriever.Next(ctx)
         if articlePtr == nil {
             return
         }
         article := *articlePtr
 
-        a.Printf("Retrieved article '%s'", article.ResolvedTitle)
+        a.Printf("Got article '%s'", article.ResolvedTitle)
         parsedArticle, err := parser.Parse(ctx, article.ResolvedURL)
         if err != nil {
             a.Printf("Error when parsing article '%s': %s", article.ResolvedTitle, err)

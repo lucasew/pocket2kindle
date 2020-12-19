@@ -26,6 +26,7 @@ func (p *PocketRetriever) getRound() *api.RetrieveResult {
         if err != nil {
             log.Printf("Failed to fetch data from pocket. Trying in 5 seconds: %s", err.Error())
             time.Sleep(5*time.Second)
+            continue
         }
         p.offset += options.Count
         return items

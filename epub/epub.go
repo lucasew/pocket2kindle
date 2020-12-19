@@ -87,30 +87,34 @@ func CreateEpub(articles []EpubArticle, options EpubOptions, filename string) er
 
 // fetchImages return the content with fixed references to fetched images in the book
 func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
+    images := map[string]string{}
     var err error
     ch := GetImagesFromHtml(content)
+    heartbeat := time.NewTicker(time.Second)
+    defer heartbeat.Stop()
     for {
         select {
         case <-ctx.Done():
             return content
         case img := <-ch:
-            extension := GetExtension(img)
-            if extension == "" {
+            _, isAlreadyHere := images[img]
+            if isAlreadyHere {
                 continue
             }
-            newName := fmt.Sprintf("%s.%s", uuid.New(), extension)
+            newName := fmt.Sprintf("%s.png", uuid.New().String())
             newName, err = book.AddImage(img, newName)
             if err != nil {
                 continue
             }
+            log.Printf("Importing image '%s' as '%s'", img, newName)
+            images[img] = newName
             content = strings.ReplaceAll(content, img, newName)
-        default:
+        case <-heartbeat.C:
             if len(ch) == 0 {
                 return content
             }
         }
     }
-    return content
 }
 
 func GetImagesFromHtml(content string) chan(string) {
@@ -125,7 +129,6 @@ func GetImagesFromHtml(content string) chan(string) {
             if node.Data == "img" {
                 for _, v := range node.Attr {
                     if v.Key == "src" {
-                        log.Printf("Found image '%s'", v.Val)
                         ch <- v.Val
                         break
                     }
