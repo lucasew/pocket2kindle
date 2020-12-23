@@ -119,7 +119,7 @@ func (a *App) StepFetchArticles(ctx context.Context) ([]epub.EpubArticle, error)
             Title: article.ResolvedTitle,
             Content: parsedArticle.Content,
             Actions: map[string]string{
-                "Original article": article.ResolvedURL,
+                article.ResolvedURL: article.ResolvedURL,
                 "Favorite": a.GetFavUrl(article.ItemID),
             },
         }
