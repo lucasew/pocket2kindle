@@ -185,6 +185,7 @@ func (a *App) Run(ctx context.Context) error {
 
 func (a *App) StepArchive() error {
     if a.ArchiveBundled {
+        log.Printf("Archiving bundled articles...")
         actions := make([]*pocket.Action, 0, len(a.processedPocketArticles))
         for _, id := range a.processedPocketArticles {
             actions = append(actions, pocket.NewArchiveAction(id))
