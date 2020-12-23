@@ -163,7 +163,7 @@ func (a *App) Run(ctx context.Context) error {
         Title: fmt.Sprintf("Pocket articles %d/%d/%d %d:%2.d", now.Day(), now.Month(), now.Year(), now.Hour(), now.Minute()),
     }
     epubFile := fmt.Sprintf("%s.epub", uuid.New())
-    mobiFile := fmt.Sprintf("%s.epub", uuid.New())
+    mobiFile := fmt.Sprintf("%s.mobi", uuid.New())
     a.Printf("Generating epub file...")
     err = epub.CreateEpub(articles, epubOptions, epubFile)
     if err != nil {
