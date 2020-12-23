@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lucasew/pocket2kindle/epub"
 	"github.com/lucasew/pocket2kindle/parse"
 	"github.com/lucasew/pocket2kindle/pocket"
@@ -161,18 +162,19 @@ func (a *App) Run(ctx context.Context) error {
         Author: "Some machine, somewhere",
         Title: fmt.Sprintf("Pocket articles %d/%d/%d %d:%2.d", now.Day(), now.Month(), now.Year(), now.Hour(), now.Minute()),
     }
-
+    epubFile := fmt.Sprintf("%s.epub", uuid.New())
+    mobiFile := fmt.Sprintf("%s.epub", uuid.New())
     a.Printf("Generating epub file...")
-    err = epub.CreateEpub(articles, epubOptions, "book.epub")
+    err = epub.CreateEpub(articles, epubOptions, epubFile)
     if err != nil {
         return err
     }
-    defer a.DeleteIntermediate("book.epub")
-    err = a.StepConvertBook(ctx, "book.epub", "out.mobi")
+    defer a.DeleteIntermediate(epubFile)
+    err = a.StepConvertBook(ctx, epubFile, mobiFile)
     if err != nil {
         return err
     }
-    err = a.StepSendEmail(ctx, "out.mobi")
+    err = a.StepSendEmail(ctx, mobiFile)
     if err != nil {
         return err
     }
