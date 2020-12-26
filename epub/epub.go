@@ -87,7 +87,7 @@ func CreateEpub(articles []EpubArticle, options EpubOptions, filename string) er
 
 // fetchImages return the content with fixed references to fetched images in the book
 func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
-    images := map[string]string{}
+    images := sync.Map{}
     var err error
     ch := GetImagesFromHtml(content)
     heartbeat := time.NewTicker(time.Second)
@@ -97,7 +97,7 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
         case <-ctx.Done():
             return content
         case img := <-ch:
-            _, isAlreadyHere := images[img]
+            _, isAlreadyHere := images.Load(img)
             if isAlreadyHere {
                 continue
             }
@@ -107,7 +107,7 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
                 continue
             }
             log.Printf("Importing image '%s' as '%s'", img, newName)
-            images[img] = newName
+            images.Store(img, newName)
             content = strings.ReplaceAll(content, img, newName)
         case <-heartbeat.C:
             if len(ch) == 0 {
