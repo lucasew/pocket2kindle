@@ -32,7 +32,7 @@ func init() {
 func main() {
     err := a.Run(context.Background())
     if err != nil {
-        log.Printf("error: %s", err.Error())
+        log.Fatal(err)
     }
     log.Printf("Done!")
 }
