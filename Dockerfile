@@ -1,4 +1,4 @@
-FROM debian:sid-slim as builder
+FROM ubuntu:bionic as builder
 
 RUN apt update && apt install golang ca-certificates -y --no-install-recommends
 
@@ -8,7 +8,7 @@ WORKDIR /
 
 RUN go build -o p2k ./cmd/p2k/main.go
 
-FROM debian:sid-slim
+FROM ubuntu:bionic
 
 RUN apt update \
     && apt-get install -y wget python xz-utils xdg-utils \
