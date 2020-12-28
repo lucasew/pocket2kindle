@@ -5,7 +5,7 @@ pkgs.buildGoModule rec {
   vendorSha256 = "0z5flbrii5dqylv5pap3svbm652jgqdsmnlzfa8nx86h3drk2fjn";
   src = ./.;
   buildInputs = with pkgs; [
-    calibre
+    calibre-py2
   ];
   meta = with pkgs.lib; {
     description = "Pocket2Kindle: Fetch articles from pocket and send as ebook to kindle";
