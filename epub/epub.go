@@ -113,11 +113,12 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
                 continue
             }
             r, err := http.Get(img)
-            r.Body.Close()
+            if (r.Body != nil) {
+                r.Body.Close()
+            }
             if err != nil || r.StatusCode < 200 || r.StatusCode > 400 {
                 log.Printf("Not importing image '%s' cause status code is %d", img, r.StatusCode)
                 continue
-
             }
             extension := GetExtension(img)
             if extension == "" {
