@@ -1,6 +1,4 @@
-let
-  pkgs = import <nixpkgs> {};
-in
+{pkgs ? import <nixpkgs> {}}:
 pkgs.buildGoModule rec {
   name = "p2k";
   version = "0.0.1";
