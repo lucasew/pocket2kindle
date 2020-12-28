@@ -44,9 +44,13 @@ func RunCommandContext(ctx context.Context, cmd *exec.Cmd) error {
             close(cb)
         }()
         go func() {
-            _, err := cmd.Process.Wait()
+            p, err := cmd.Process.Wait()
             closed = true
-            cb <- err
+            if p.ExitCode() != 0 {
+                cb <- fmt.Errorf("non zero exit code, returned err: %+v", err)
+            } else {
+                cb <- err
+            }
             close(cb)
         }()
     }()
