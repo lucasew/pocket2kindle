@@ -85,6 +85,17 @@ func CreateEpub(articles []EpubArticle, options EpubOptions, filename string) er
     return book.Write(filename)
 }
 
+func GetExtension(name string) string {
+    noQueryStrings := strings.Split(name, "?")[0]
+    parts := strings.Split(noQueryStrings, ".")
+    extension := parts[len(parts) - 1] // the thing after .
+    if len(extension) > 5 {
+        return "png"
+    } else {
+        return extension
+    }
+}
+
 // fetchImages return the content with fixed references to fetched images in the book
 func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
     images := sync.Map{}
@@ -101,7 +112,7 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
             if isAlreadyHere {
                 continue
             }
-            newName := fmt.Sprintf("%s.png", uuid.New().String())
+            newName := fmt.Sprintf("%s.%s", uuid.New().String(), GetExtension(img))
             newName, err = book.AddImage(img, newName)
             if err != nil {
                 continue
@@ -116,6 +127,7 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
         }
     }
 }
+
 
 func GetImagesFromHtml(content string) chan(string) {
     ch := make(chan(string), 16)
