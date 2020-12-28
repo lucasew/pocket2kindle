@@ -113,7 +113,7 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
                 continue
             }
             r, err := http.Get(img)
-            if (r.Body != nil) {
+            if (r != nil && r.Body != nil) {
                 r.Body.Close()
             }
             if err != nil {
