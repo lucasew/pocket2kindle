@@ -116,7 +116,11 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
             if (r.Body != nil) {
                 r.Body.Close()
             }
-            if err != nil || r.StatusCode < 200 || r.StatusCode > 400 {
+            if err != nil {
+                log.Printf("Not importing image '%s' cause %s", img, err)
+                continue
+            }
+            if r == nil || r.StatusCode < 200 || r.StatusCode > 400 {
                 log.Printf("Not importing image '%s' cause status code is %d", img, r.StatusCode)
                 continue
             }
