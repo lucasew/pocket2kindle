@@ -90,7 +90,7 @@ func GetExtension(name string) string {
     parts := strings.Split(noQueryStrings, ".")
     extension := parts[len(parts) - 1] // the thing after .
     if len(extension) > 5 {
-        return "png"
+        return ""
     } else {
         return extension
     }
@@ -112,7 +112,11 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
             if isAlreadyHere {
                 continue
             }
-            newName := fmt.Sprintf("%s.%s", uuid.New().String(), GetExtension(img))
+            extension := GetExtension(img)
+            if extension == "" {
+                continue
+            }
+            newName := fmt.Sprintf("%s.%s", uuid.New().String(), extension)
             newName, err = book.AddImage(img, newName)
             if err != nil {
                 continue
