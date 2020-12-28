@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -99,7 +100,6 @@ func GetExtension(name string) string {
 // fetchImages return the content with fixed references to fetched images in the book
 func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
     images := sync.Map{}
-    var err error
     ch := GetImagesFromHtml(content)
     heartbeat := time.NewTicker(time.Second)
     defer heartbeat.Stop()
@@ -111,6 +111,13 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
             _, isAlreadyHere := images.Load(img)
             if isAlreadyHere {
                 continue
+            }
+            r, err := http.Get(img)
+            r.Body.Close()
+            if err != nil || r.StatusCode < 200 || r.StatusCode > 400 {
+                log.Printf("Not importing image '%s' cause status code is %d", img, r.StatusCode)
+                continue
+
             }
             extension := GetExtension(img)
             if extension == "" {
