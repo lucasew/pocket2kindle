@@ -1,6 +1,9 @@
 FROM ubuntu:focal as builder
 
+ARG TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt update && apt install golang ca-certificates -y --no-install-recommends
+
 
 ADD . .
 
@@ -9,6 +12,9 @@ WORKDIR /
 RUN go build -o p2k ./cmd/p2k/main.go
 
 FROM ubuntu:focal
+
+ARG TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt update \
     && apt-get install -y wget python xz-utils xdg-utils \
