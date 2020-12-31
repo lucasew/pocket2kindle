@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/mail"
 	"net/smtp"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -116,8 +117,15 @@ func (a *App) StepFetchArticles(ctx context.Context) ([]epub.EpubArticle, error)
             go processArticle(ctx)
             return
         }
+        u, err := url.Parse(article.ResolvedURL)
+        if err != nil {
+            a.Printf("Can't parse url '%s': %s", article.ResolvedURL, err)
+            go processArticle(ctx)
+            return
+        }
         epubArticle := epub.EpubArticle{
             Title: article.ResolvedTitle,
+            URL: *u,
             Content: parsedArticle.Content,
             Actions: map[string]string{
                 article.ResolvedURL: article.ResolvedURL,

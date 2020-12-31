@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +20,7 @@ import (
 
 type EpubArticle struct {
     Title string
+    URL url.URL
     Content string
     Actions map[string]string // Clickable links in the begin and end of each article
 }
@@ -61,10 +63,10 @@ func CreateEpub(articles []EpubArticle, options EpubOptions, filename string) er
         go func(i int) {
             buf := bytes.NewBuffer([]byte{})
             tpl.Execute(buf, articles[i])
-            content := buf.String()
+            articles[i].Content = buf.String()
             ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
             defer cancel()
-            articles[i].Content = fetchImages(ctx, content, book)
+            articles[i].fetchImages(ctx, book)
             wg.Done()
         }(i)
     }
@@ -98,21 +100,32 @@ func GetExtension(name string) string {
 }
 
 // fetchImages return the content with fixed references to fetched images in the book
-func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
+func (a *EpubArticle) fetchImages(ctx context.Context, book *ep.Epub) {
     images := sync.Map{}
-    ch := GetImagesFromHtml(content)
+    ch := a.GetImagesFromHtml()
     heartbeat := time.NewTicker(time.Second)
+    stuck := 0
     defer heartbeat.Stop()
     for {
         select {
         case <-ctx.Done():
-            return content
+            return
         case img := <-ch:
-            _, isAlreadyHere := images.Load(img)
+            stuck = 0
+            if img == "" {
+                continue
+            }
+            imgUrl, err := url.Parse(img)
+            if err != nil {
+                log.Printf("Cant parse url '%s'", imgUrl.String())
+                continue
+            }
+            imgUrl = a.URL.ResolveReference(imgUrl)
+            _, isAlreadyHere := images.Load(imgUrl)
             if isAlreadyHere {
                 continue
             }
-            r, err := http.Get(img)
+            r, err := http.Get(imgUrl.String())
             if (r != nil && r.Body != nil) {
                 r.Body.Close()
             }
@@ -124,28 +137,29 @@ func fetchImages(ctx context.Context, content string, book *ep.Epub) string {
                 log.Printf("Not importing image '%s' cause status code is %d", img, r.StatusCode)
                 continue
             }
-            extension := GetExtension(img)
+            extension := GetExtension(imgUrl.String())
             if extension == "" {
                 continue
             }
             newName := fmt.Sprintf("%s.%s", uuid.New().String(), extension)
-            newName, err = book.AddImage(img, newName)
+            newName, err = book.AddImage(imgUrl.String(), newName)
             if err != nil {
                 continue
             }
-            log.Printf("Importing image '%s' as '%s'", img, newName)
-            images.Store(img, newName)
-            content = strings.ReplaceAll(content, img, newName)
+            log.Printf("Importing image '%s' as '%s'", imgUrl, newName)
+            images.Store(imgUrl, newName)
+            a.Content = strings.ReplaceAll(a.Content, img, newName)
         case <-heartbeat.C:
-            if len(ch) == 0 {
-                return content
+            if len(ch) == 0 && stuck >= 5 {
+                return
             }
+            stuck++
         }
     }
 }
 
 
-func GetImagesFromHtml(content string) chan(string) {
+func (a *EpubArticle) GetImagesFromHtml() chan(string) {
     ch := make(chan(string), 16)
     go func() {
         defer close(ch)
@@ -157,7 +171,9 @@ func GetImagesFromHtml(content string) chan(string) {
             if node.Data == "img" {
                 for _, v := range node.Attr {
                     if v.Key == "src" {
-                        ch <- v.Val
+                        if len(strings.Trim(v.Val, " ")) > 0 {
+                            ch <- v.Val
+                        }
                         break
                     }
                 }
@@ -165,7 +181,7 @@ func GetImagesFromHtml(content string) chan(string) {
             recur(node.FirstChild)
             recur(node.NextSibling)
         }
-        buf := bytes.NewBufferString(content)
+        buf := bytes.NewBufferString(a.Content)
         node, err := html.Parse(buf)
         if err != nil {
             return
