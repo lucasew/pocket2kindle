@@ -8,22 +8,24 @@
 - Run
   - Calibre: `ebook-convert` command
   - The authentication tokens as environment variables for pocket and for SMTP server if you specified a destination email
-    - **TIP**: Use a secondary google account because you will need to enable access through insecure applications if using gmail
+    - **TIP**: Use a secondary google account because you will need to enable access through insecure applications if using gmail. GMX is also pretty convenient to use this.
     - **TIP**: [Dotenv](https://github.com/lucasew/dotenv/)
   
 # The flow
-- Fetch n*3 articles from pocket
-- Parse n articles using a very competent port of Readability for Golang
-- Generate a EPUB from the parsed articles with favorite links pointing to pocket API
-- Convert that EPUB to a MOBI file
-- Send the MOBI file to the provided email via SMTP server (the origin address must be authorized in your amazon account)
-- Wait a few moments while the amazon digital gnomes deliver the file to your device
-- Remove that intermediate epub file if you didn't specify it to not remove
+- There is a background job getting a stream of articles from new to old
+- Another background job parses the articles in memory skipping the ones that aren't parseable until it gets the desired amount
+- After article parsing the book starts being assembled
+- Each article before being added to the book have its images downloaded and added to the book fixing the image references in the HTML
+- After all the articles are stored in the epub file the file is packed.
+- After the epub packaging `ebook-convert` is started to convert it to mobi (this is required because I didn't found good libraries to create mobi directly)
+- With the mobi file created the epub file is marked as a intermediate file and will be deleted unless you pass `-d`
+- If the email destination is specified the mobi file is sent using the SMTP server provided. If the mail is successfully sent, the mobi file is marked as a intermediate file.
+- Internediate files are deleted if `-d` is not provided.
 - Profit!
 
 # Advantages
 - It's free
-- You have the exact notion of what stage is your delivery
+- You have the exact notion of what stage is your delivery (lots of logs)
 
 # Disadvantages
 - Setup authentication to a SMTP server (only done once)
