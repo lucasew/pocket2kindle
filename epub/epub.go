@@ -139,11 +139,19 @@ func (a *EpubArticle) fetchImages(ctx context.Context, book *ep.Epub) {
             }
             extension := GetExtension(imgUrl.String())
             if extension == "" {
+                log.Printf("'%s' ignored: no extension", imgUrl)
                 continue
             }
             newName := fmt.Sprintf("%s.%s", uuid.New().String(), extension)
-            newName, err = book.AddImage(imgUrl.String(), newName)
-            if err != nil {
+            switch strings.ToLower(extension) {
+            case "jpg", "jpeg", "png", "svg":
+                newName, err = book.AddImage(imgUrl.String(), newName)
+                if err != nil {
+                    log.Printf("Failed to add image '%s': %s", imgUrl.String(), err)
+                    continue
+                }
+            default:
+                log.Printf("Extension '%s' for the image '%s' is not known for images", extension, imgUrl.String())
                 continue
             }
             log.Printf("Importing image '%s' as '%s'", imgUrl, newName)
