@@ -13,6 +13,7 @@ import (
 
 	"text/template"
 
+	"github.com/bmaupin/go-epub"
 	ep "github.com/bmaupin/go-epub"
 	"github.com/google/uuid"
 	"golang.org/x/net/html"
@@ -46,9 +47,25 @@ const DefaultArticleTemplate = `
 {{ end }}
 `
 
+type BookBorrower struct {
+    sync.Mutex
+    book *epub.Epub
+}
+
+func (bb *BookBorrower) Borrow(f func(b *epub.Epub) error) error {
+    bb.Lock()
+    defer bb.Unlock()
+    return f(bb.book)
+}
+
+func NewBookBorrower(book *epub.Epub) *BookBorrower {
+    return &BookBorrower{book: book}
+}
+
 func CreateEpub(articles []EpubArticle, options EpubOptions, filename string) error {
-    book := ep.NewEpub(options.Title)
-    book.SetAuthor(options.Author)
+    source_book := ep.NewEpub(options.Title)
+    source_book.SetAuthor(options.Author)
+    book := NewBookBorrower(source_book)
     tplTxt := options.Template
     if tplTxt == "" {
         tplTxt = DefaultArticleTemplate
@@ -73,19 +90,27 @@ func CreateEpub(articles []EpubArticle, options EpubOptions, filename string) er
     wg.Wait()
     for _, article := range articles {
         filename := fmt.Sprintf("%s.html", uuid.New())
-        _, err := book.AddSection(article.Content, article.Title, filename, "")
+        err = book.Borrow(func(b *epub.Epub) error {
+            _, err := b.AddSection(article.Content, article.Title, filename, "")
+            return err
+        })
         if err != nil {
             return err
         }
     }
     if options.SendMoreLink != "" {
         data := fmt.Sprintf(`<h1>Final actions</h1> <a href="%s">Send More</a>`, options.SendMoreLink)
-        _, err := book.AddSection(data, "Final actions", "finalactions.html", "")
+        err = book.Borrow(func(b *epub.Epub) error {
+            _, err := b.AddSection(data, "Final actions", "finalactions.html", "")
+            return err
+        })
         if err != nil {
             return err
         }
     }
-    return book.Write(filename)
+    return book.Borrow(func(b *epub.Epub) error {
+        return b.Write(filename)
+    })
 }
 
 func GetExtension(name string) string {
@@ -100,7 +125,7 @@ func GetExtension(name string) string {
 }
 
 // fetchImages return the content with fixed references to fetched images in the book
-func (a *EpubArticle) fetchImages(ctx context.Context, book *ep.Epub) {
+func (a *EpubArticle) fetchImages(ctx context.Context, book *BookBorrower) {
     images := sync.Map{}
     ch := a.GetImagesFromHtml()
     heartbeat := time.NewTicker(time.Second)
@@ -145,7 +170,10 @@ func (a *EpubArticle) fetchImages(ctx context.Context, book *ep.Epub) {
             newName := fmt.Sprintf("%s.%s", uuid.New().String(), extension)
             switch strings.ToLower(extension) {
             case "jpg", "jpeg", "png", "svg":
-                newName, err = book.AddImage(imgUrl.String(), newName)
+                book.Borrow(func (b *epub.Epub) error {
+                    newName, err = b.AddImage(imgUrl.String(), newName)
+                    return err
+                })
                 if err != nil {
                     log.Printf("Failed to add image '%s': %s", imgUrl.String(), err)
                     continue
