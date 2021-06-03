@@ -50,7 +50,7 @@ func RunCommandContext(ctx context.Context, cmd *exec.Cmd) error {
             p, err := cmd.Process.Wait()
             closed = true
             if p.ExitCode() != 0 {
-                cb <- fmt.Errorf("%e: %d", ErrNonZeroExitCode, p.ExitCode())
+                cb <- fmt.Errorf("%w: %d", ErrNonZeroExitCode, p.ExitCode())
             } else {
                 cb <- err
             }
