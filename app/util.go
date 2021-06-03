@@ -6,7 +6,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+    "errors"
 )
+
+var ErrNonZeroExitCode = errors.New("non zero exit code")
 
 func (a *App) LookupBinary(name string) error {
     a.Printf("Looking for '%s'", name)
@@ -47,7 +50,7 @@ func RunCommandContext(ctx context.Context, cmd *exec.Cmd) error {
             p, err := cmd.Process.Wait()
             closed = true
             if p.ExitCode() != 0 {
-                cb <- fmt.Errorf("non zero exit code, returned err: %+v", err)
+                cb <- fmt.Errorf("%e: %d", ErrNonZeroExitCode, p.ExitCode())
             } else {
                 cb <- err
             }

@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/mail"
@@ -51,7 +52,11 @@ func (a *App) StepConvertBook(ctx context.Context, epubFile string, mobiFile str
     cmd := exec.Command("ebook-convert", epubFile, mobiFile)
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
-    return RunCommandContext(ctx, cmd)
+    err = RunCommandContext(ctx, cmd)
+    if errors.Is(err, ErrNonZeroExitCode) {
+        return nil
+    }
+    return err
 }
 
 func (a *App) StepSendEmail(ctx context.Context, file string) error {
