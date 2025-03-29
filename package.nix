@@ -9,7 +9,7 @@ buildGoModule {
 
   src = ./.;
 
-  vendorHash = "sha256-mUpJ3VvtUvEgnctyZ+aiWpgIgn+olEWjG+X9wEAJx2I=";
+  vendorHash = "sha256-rSahRMBEj788k6BY2EujcxQ6LmFb7WSpMOr+bFE7sDk=";
 
   buildInputs = [
     calibre

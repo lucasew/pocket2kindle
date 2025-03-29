@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/motemen/go-pocket v0.0.0-20201204003030-43b897100651
 	github.com/scorredoira/email v0.0.0-20191107070024-dc7b732c55da
-	golang.org/x/net v0.37.0
+	golang.org/x/net v0.38.0
 )
 
 require (
